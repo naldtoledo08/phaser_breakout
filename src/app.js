@@ -14,12 +14,15 @@ var ball;
 var bHasLaunched = false;
 var ballOnPaddle = true;
 
+var level = 1;
 var lives = 3;
 var score = 0;
 var scoreText;
 var livesText;
 var introText;
+var levelIntroText;
 var highScoreText;
+var levelText;
 var highScore = (document.cookie.indexOf('highscore=') === -1) ? 0 : utils.getCookie('highscore');
 var pingSound;
 var outSound;
@@ -27,6 +30,7 @@ var gameOverSound;
 var music;
 var champ;
 var emitter;
+
 
 var level = 1;
 
@@ -37,8 +41,7 @@ function preload(){
     breakout.preloadImages();
 }
 
-function create(){
-	
+function create(){	
 	game.physics.startSystem(Phaser.Physics.ARCADE);
 
     //  We check bounds collisions against all walls other than the bottom one
@@ -48,21 +51,26 @@ function create(){
 
     breakout.loadSFX();
 
-    breakout.loadBricks(4, 8);
+    breakout.loadBricks(4,8);
 
     breakout.loadPaddle();
 
 	breakout.loadBall();
 		
-	ball.events.onOutOfBounds.add(ballReset, this);
+	ball.events.onOutOfBounds.add(ballLost, this);
 
     //scoreText       = breakout.loadText(32, 50, 'Score: 1', {   });
-	scoreText       = breakout.loadText(32, 50, 'Score: 0');
-    livesText       = breakout.loadText(680, 50, 'Lives: 3');
-    highScoreText   = breakout.loadText(32, 560, 'Highest Score: '+ highScore);
+    highScoreText   = breakout.loadText(25, 20, 'Highest Score: '+ highScore);
+    levelText       = breakout.loadText(25, 50, 'Level: 1');
 
-    introText       = game.add.text(game.world.centerX, 400, '- Click to Start -', { font: "40px Arial", align: "center" });
+	scoreText       = breakout.loadText(680, 555, 'Score: 0');
+    livesText       = breakout.loadText(25, 555, 'Lives: 3');
+    //livesText       = breakout.loadText(680, 50, 'Lives: 3');    
+
+    levelIntroText   = game.add.text(game.world.centerX, 350, 'Level 1', { font: "30px Arial", align: "center" });
+    introText       = game.add.text(game.world.centerX, 400, '--- Click to Start ---', { font: "40px Arial", align: "center" });
     introText.anchor.setTo(0.5, 0.5);
+    levelIntroText.anchor.setTo(0.5, 0.5);
 
     /*** Particles ***/
     emitter = game.add.emitter(0, 0, 100);
@@ -95,27 +103,33 @@ function update(){
 }
 
 
-function ballHitBrick (_ball, _brick) {
+function ballHitBrick (_ball, _brick) {    
+    breakout.incrementtHitCount();
     breakout.particleBurst(_brick, emitter);
-
+    score += breakout.getScore();
     _brick.kill();
     pingSound.play();
-    score++;
+    
     scoreText.text = 'Score: ' + score;
+
     if(score > highScore){
     	utils.setCookie('highscore', score);
     	highScoreText.text = 'Highest Score: ' + utils.getCookie('highscore');
     }
 
-    if (bricks.countLiving() == 0 || score >= 24)
-    {	
-    	music.stop();
-    	
+    if (bricks.countLiving() == 0)
+    {
+    	music.stop();    	
         score += 10;
         utils.setCookie('highscore', score);
         scoreText.text = 'Score: ' + score;
-        champion();
+        breakout.nextLevel(level);
     }
+}
+
+
+function descend() {
+    bricks.y += 10;
 }
 
 function champion(){
@@ -126,8 +140,8 @@ function champion(){
 }
 
 function ballHitPaddle (_ball, _paddle) {
-
     var diff = 0;
+    breakout.resetHitCount();
 
     if (_ball.x < _paddle.x)
     {
@@ -147,7 +161,6 @@ function ballHitPaddle (_ball, _paddle) {
         //  Add a little random X to stop it bouncing straight up!
         _ball.body.velocity.x = 2 + Math.random() * 8;
     }
-
 }
 
 function launchBall(){
@@ -160,14 +173,13 @@ function launchBall(){
 		ball.body.velocity.y = -250;
 		ball.body.velocity.x = 75;
 
-        introText.visible = false;
+        breakout.introTextVisibility(false);
 	}
 }
 
 
-function ballReset(){
-	
-	lives--;
+function ballLost(){
+    lives--;
     livesText.text = 'Lives: ' + lives;
     game.camera.shake(0.001, 800);
     if (lives === 0)
@@ -177,11 +189,10 @@ function ballReset(){
     else
     {
         breakout.displayContinue();
-    	outSound.play();    	
-        bHasLaunched = false;
-		ball.reset(paddle.body.x, paddle.body.y - 35);
+        outSound.play();       
+
+        breakout.ballReset();
     }
 }
-
 
 

@@ -4,18 +4,32 @@ Breakout.prototype = {
 
     constructor: Breakout,
 
-    preloadSFX : function(){
+    hitCount : -1,
+    scoreAdd : 1,
+    scoretMultiplier : 2,
 
+    incrementtHitCount: function(){
+        this.hitCount++;
+    },
+    resetHitCount: function(){
+        this.hitCount = -1;
+    },
+    getScore: function(){
+        if(this.hitCount > 0 ){
+            return ((this.hitCount * this.scoretMultiplier) + this.scoreAdd);
+        }
+        return this.scoreAdd;
+    },
+
+    preloadSFX : function(){
         game.load.audio('bgm'       , 'resource/audio/sneaky_sfx.mp3');
         game.load.audio('ping'      , 'resource/audio/p-ping.mp3');
         game.load.audio('out'       , 'resource/audio/player_death.wav');
         game.load.audio('gameover'  , 'resource/audio/gameover.mp3');
         game.load.audio('champ'     , 'resource/audio/champ.mp3');
-
     },
 
     loadSFX : function(){
-
         music = game.add.audio('bgm');
         music.loop = true;
         
@@ -23,17 +37,14 @@ Breakout.prototype = {
         pingSound       = game.add.audio('ping');
         outSound        = game.add.audio('out');
         gameOverSound   = game.add.audio('gameover');
-
     },
 
     preloadImages : function(){
-
         game.load.image('background', 'resource/images/background/cloudy.jpg');
         game.load.image('paddle'    , 'resource/images/paddle/paddle_black.png');
         game.load.image('ball'      , 'resource/images/ball/pingpong.png');
         game.load.image('brick'     , 'resource/images/bricks/diamond-icon1.png');
         game.load.image('diamond' , 'resource/images/bricks/diamond-icon2.png');
-
     },
 
     loadPaddle: function(){
@@ -71,9 +82,38 @@ Breakout.prototype = {
         }
     },
 
+    loadBricks2: function(rowCount, colCount){
+        var brick;
+
+        bricks = game.add.group();
+        bricks.enableBody = true;
+        bricks.physicsBodyType = Phaser.Physics.ARCADE;
+
+        for(y = 1; y < rowCount; y++){
+            for(x= 1; x<= colCount; x++){
+                brick = bricks.create((x * 70), (y * 52), 'brick');
+                brick.anchor.setTo(0.5, 0.5);
+                brick.body.bounce.set(1);
+                brick.body.immovable = true;
+                brick.animations.add('fly', [ 0, 1, 2, 3 ], 20, true);
+                brick.play('fly');
+                brick.body.moves = false;
+            }
+        }
+
+        bricks.x = 100;
+        bricks.y = 50;
+
+        //  All this does is basically start the invaders moving. Notice we're moving the Group they belong to, rather than the invaders directly.
+        var tween = game.add.tween(bricks).to( { x: 200 }, 2000, Phaser.Easing.Linear.None, true, 0, 1000, true);
+
+        //  When the tween loops it calls descend
+        tween.onLoop.add(descend, this);
+    },
+
     loadText: function(x,y, text, styleObj = {}){
         if( typeof styleObj.font === 'undefined' || styleObj.font === null ){
-            styleObj.font = "22px Arial";
+            styleObj.font = "20px Arial";
         }
 
         if( typeof styleObj.fill === 'undefined' || styleObj.fill === null ){
@@ -93,17 +133,39 @@ Breakout.prototype = {
 
     displayContinue: function(){
         introText.text = '- Click to continue -';
-        introText.visible = true;
+        this.introTextVisibility(true);
     },
 
     particleBurst: function(pointer, particle) {
-        particle.x = pointer.x;
-        particle.y = (pointer.y+20);
+        particle.x = pointer.body.x;
+        particle.y = (pointer.body.y+20);
 
         particle.start(true, 2000, null, 1);
     },
 
     nextLevel: function(level){
-        
+        level = level+1;
+        levelText.text = "Level: "+level;
+        this.introTextVisibility(true, "Level " + level, "--- Click to Start ---");
+        this.ballReset();
+    },
+
+    ballReset: function(){        
+        bHasLaunched = false;
+        ball.body.velocity.setTo(0, 0);  
+        ball.reset(paddle.body.x, paddle.body.y - 35);
+    },
+
+    introTextVisibility: function(value = false, _levelIntroText, _introText){
+        introText.visible       = value;
+        levelIntroText.visible  = value;
+
+        if( typeof _levelIntroText !== 'undefined' && _levelIntroText !== null ){
+            levelIntroText.text = _levelIntroText;
+        }
+
+        if( typeof _introText !== 'undefined' && _introText !== null ){
+            introText.text = _introText;
+        }
     }
 }

@@ -66,51 +66,6 @@ Breakout.prototype = {
         ball.body.bounce.set(1);
     },
 
-    loadBricks: function(rowCount, colCount){
-        var brick;
-
-        bricks = game.add.group();
-        bricks.enableBody = true;
-        bricks.physicsBodyType = Phaser.Physics.ARCADE;
-
-        for(y = 1; y < rowCount; y++){
-            for(x= 1; x<= colCount; x++){
-                brick = bricks.create(50 + (x * 70), 100 + (y * 52), 'brick');
-                brick.body.bounce.set(1);
-                brick.body.immovable = true;
-            }
-        }
-    },
-
-    loadBricks2: function(rowCount, colCount){
-        var brick;
-
-        bricks = game.add.group();
-        bricks.enableBody = true;
-        bricks.physicsBodyType = Phaser.Physics.ARCADE;
-
-        for(y = 1; y < rowCount; y++){
-            for(x= 1; x<= colCount; x++){
-                brick = bricks.create((x * 70), (y * 52), 'brick');
-                brick.anchor.setTo(0.5, 0.5);
-                brick.body.bounce.set(1);
-                brick.body.immovable = true;
-                brick.animations.add('fly', [ 0, 1, 2, 3 ], 20, true);
-                brick.play('fly');
-                brick.body.moves = false;
-            }
-        }
-
-        bricks.x = 100;
-        bricks.y = 50;
-
-        //  All this does is basically start the invaders moving. Notice we're moving the Group they belong to, rather than the invaders directly.
-        var tween = game.add.tween(bricks).to( { x: 200 }, 2000, Phaser.Easing.Linear.None, true, 0, 1000, true);
-
-        //  When the tween loops it calls descend
-        tween.onLoop.add(descend, this);
-    },
-
     loadText: function(x,y, text, styleObj = {}){
         if( typeof styleObj.font === 'undefined' || styleObj.font === null ){
             styleObj.font = "20px Arial";
@@ -143,9 +98,14 @@ Breakout.prototype = {
         particle.start(true, 2000, null, 1);
     },
 
-    nextLevel: function(level){
-        level = level+1;
-        levelText.text = "Level: "+level;
+    nextLevel: function(_level){
+        level           = _level+1;
+        levelText.text  = "Level: "+level;
+        console.log("nextLevel: "+level);
+        var loadBrick   = "loadBricks"+level;
+        
+        brick[loadBrick]();
+
         this.introTextVisibility(true, "Level " + level, "--- Click to Start ---");
         this.ballReset();
     },

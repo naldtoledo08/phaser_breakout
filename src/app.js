@@ -34,7 +34,8 @@ var emitter;
 
 var level = 1;
 
-var breakout    = new Breakout();
+var breakout = new Breakout();
+var brick    = new Bricks();
 
 function preload(){
     breakout.preloadSFX();
@@ -51,7 +52,7 @@ function create(){
 
     breakout.loadSFX();
 
-    breakout.loadBricks(4,8);
+    brick.loadBricks1();
 
     breakout.loadPaddle();
 

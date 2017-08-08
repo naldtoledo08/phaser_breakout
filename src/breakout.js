@@ -57,6 +57,10 @@ Breakout.prototype = {
         paddle.body.immovable = true;
     },
 
+    addSizeToPaddle: function(size){        
+        paddle.width = paddle.width + size;
+    },
+
     loadBall: function(){
         ball = game.add.sprite(game.world.centerX, (paddle.y - 35), 'ball');
         ball.anchor.set(0.5, 0.5);
@@ -101,16 +105,16 @@ Breakout.prototype = {
     nextLevel: function(_level){
         level           = _level+1;
         levelText.text  = "Level: "+level;
-        console.log("nextLevel: "+level);
+
         var loadBrick   = "loadBricks"+level;
-        
+
         brick[loadBrick]();
 
         this.introTextVisibility(true, "Level " + level, "--- Click to Start ---");
         this.ballReset();
     },
 
-    ballReset: function(){        
+    ballReset: function(){
         bHasLaunched = false;
         ball.body.velocity.setTo(0, 0);  
         ball.reset(paddle.body.x, paddle.body.y - 35);
